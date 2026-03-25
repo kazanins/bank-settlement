@@ -43,12 +43,12 @@ export default function BankPanel({ bank }: BankPanelProps) {
     (bank === "B" && step === 9);
 
   const isPaymentEngineActive =
-    (bank === "A" && step >= 2 && step <= 5) ||
-    (bank === "B" && (step === 5 || step === 6 || step === 9));
+    (bank === "A" && step >= 2 && step <= 7) ||
+    (bank === "B" && (step === 5 || step === 6 || step === 8 || step === 9));
 
   const isAccountsActive =
     (bank === "A" && (step === 4 || step === 5)) ||
-    (bank === "B" && (step === 5 || step === 8));
+    (bank === "B" && (step === 5 || step === 8 || step === 9));
 
   function getCustomerStatus() {
     if (bank === "A") {
@@ -77,9 +77,13 @@ export default function BankPanel({ bank }: BankPanelProps) {
         case 3:
           return { text: "Generating pain.002 status report → Customer", color: "var(--orange-500)" };
         case 4:
-          return { text: "Onramp — Customer USD → Omnibus → bankUSD", color: "var(--orange-500)" };
+          return { text: "Onramp — Customer USD → Omnibus → bankUSD", color: "var(--green-500)" };
         case 5:
           return { text: "Sending pacs.008 via SWIFT → Bank B", color: "var(--blue-500)" };
+        case 6:
+          return { text: "Receiving pacs.002 ← Bank B: Accepted, settlement in process", color: "var(--blue-500)" };
+        case 7:
+          return { text: "Issuing camt.054 debit notification → Customer", color: "var(--orange-500)" };
         default:
           return null;
       }
@@ -87,6 +91,7 @@ export default function BankPanel({ bank }: BankPanelProps) {
     if (bank === "B") {
       if (step === 5) return { text: "Receiving pacs.008 via SWIFT ← Bank A", color: "var(--blue-500)" };
       if (step === 6) return { text: "Sending pacs.002 → Bank A: Accepted, settlement in process", color: "var(--blue-500)" };
+      if (step === 8) return { text: "Offramp — bankUSD → Omnibus → Customer USD", color: "var(--green-500)" };
       if (step === 9) return { text: "Issuing camt.054 credit notification → Customer", color: "var(--orange-500)" };
     }
     return null;
@@ -100,8 +105,8 @@ export default function BankPanel({ bank }: BankPanelProps) {
     if (bank === "A" && step >= 4) {
       entries.push({ label: "Payment to " + otherConfig.customerName, amount: -amt, step: 4 });
     }
-    if (bank === "B" && step >= 8) {
-      entries.push({ label: "Payment from " + otherConfig.customerName, amount: amt, step: 8 });
+    if (bank === "B" && step >= 9) {
+      entries.push({ label: "Payment from " + otherConfig.customerName, amount: amt, step: 9 });
     }
     return entries;
   }
@@ -114,7 +119,7 @@ export default function BankPanel({ bank }: BankPanelProps) {
     }
     if (bank === "B") {
       if (step >= 8) entries.push({ label: "Offramp ← bankUSD", amount: amt, step: 8 });
-      if (step >= 8) entries.push({ label: "Credit to customer", amount: -amt, step: 8 });
+      if (step >= 9) entries.push({ label: "Credit to customer", amount: -amt, step: 9 });
     }
     return entries;
   }
@@ -280,7 +285,9 @@ export default function BankPanel({ bank }: BankPanelProps) {
             style={{
               marginTop: "var(--space-2)",
               padding: "var(--space-2)",
-              background: "var(--bg-informative)",
+              background: engineStatus.color === "var(--orange-500)" ? "var(--bg-warning)"
+                : engineStatus.color === "var(--green-500)" ? "var(--bg-success)"
+                : "var(--bg-informative)",
               borderRadius: "var(--radius-sm)",
               fontSize: 10,
               color: engineStatus.color,
