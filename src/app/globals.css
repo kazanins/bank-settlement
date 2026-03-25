@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+:root {
+  /* Backgrounds */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-tertiary: #191919;
+  --bg-inverse: #ffffff;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --bg-danger: #fb2c36;
+  --bg-informative: #162456;
+  --bg-success: #193925;
+  --bg-warning: #3d2e0a;
+
+  /* Text */
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --text-tertiary: #808080;
+  --text-inverse: #0a0a0a;
+  --text-on-color: #ffffff;
+  --text-danger: #ff6b6b;
+  --text-warning: #f0a500;
+  --text-success: #4aba6a;
+  --text-link: #5b9aff;
+
+  /* Borders */
+  --border-default: rgba(255, 255, 255, 0.25);
+  --border-strong: #383838;
+  --border-subtle: #161616;
+  --border-assistive: #51a2ff;
+
+  /* Semantic */
+  --red-500: #fb2c36;
+  --green-500: #4aba6a;
+  --blue-500: #5b9aff;
+  --orange-500: #f0a500;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* Animation */
+  --duration-fast: 80ms;
+  --duration-normal: 150ms;
+  --duration-slow: 250ms;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  height: 100vh;
+}
+
+::selection {
+  background: rgba(91, 154, 255, 0.2);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+/* Animations */
+@keyframes flash-entry {
+  0% {
+    background: rgba(22, 36, 86, 0.5);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes pulse-swift {
+  0%,
+  100% {
+    border-color: var(--blue-500);
+    box-shadow: 0 0 8px rgba(91, 154, 255, 0.3);
+  }
+  50% {
+    border-color: rgba(91, 154, 255, 0.4);
+    box-shadow: 0 0 2px rgba(91, 154, 255, 0.1);
+  }
+}
+
+@keyframes pulse-tempo {
+  0%,
+  100% {
+    border-color: var(--green-500);
+    box-shadow: 0 0 8px rgba(74, 186, 106, 0.3);
+  }
+  50% {
+    border-color: rgba(74, 186, 106, 0.4);
+    box-shadow: 0 0 2px rgba(74, 186, 106, 0.1);
+  }
+}
+
+@keyframes message-flow {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  80% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+.animate-flash-entry {
+  animation: flash-entry 0.8s ease-out forwards;
+}
+
+.label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.value {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
