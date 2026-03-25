@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
+import { Actions } from "viem/tempo";
 import {
   getMintWallet,
   publicClient,
-  PATHUSD_ADDRESS,
+  TOKEN_ADDRESS,
   BANK_A_ADDRESS,
-  ERC20_ABI,
   toTokenUnits,
   uetrToBytes32,
   EXPLORER_URL,
@@ -18,11 +18,12 @@ export async function POST(request: Request) {
 
     const mintWallet = getMintWallet();
 
-    const txHash = await mintWallet.writeContract({
-      address: PATHUSD_ADDRESS,
-      abi: ERC20_ABI,
-      functionName: "transferWithMemo",
-      args: [BANK_A_ADDRESS, tokenAmount, memo],
+    // Mint bankUSD directly to Bank A's account
+    const txHash = await Actions.token.mint(mintWallet, {
+      token: TOKEN_ADDRESS,
+      to: BANK_A_ADDRESS,
+      amount: tokenAmount,
+      memo,
     });
 
     const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });

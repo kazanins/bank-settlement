@@ -14,8 +14,8 @@ const RPC_USERNAME = process.env.RPC_USERNAME ?? "REDACTED_USER";
 const RPC_PASSWORD = process.env.RPC_PASSWORD ?? "REDACTED_PASS";
 export const RPC_URL = `https://${RPC_USERNAME}:${RPC_PASSWORD}@rpc.moderato.tempo.xyz`;
 
-// pathUSD token address on Moderato
-export const PATHUSD_ADDRESS = process.env.PATHUSD_ADDRESS as Address;
+// bankUSD token address on Moderato (created via TIP-20 factory)
+export const TOKEN_ADDRESS = process.env.TOKEN_ADDRESS as Address;
 
 // Account addresses
 export const MINT_ADDRESS = process.env.MINT_ADDRESS as Address;
@@ -28,10 +28,9 @@ export const EXPLORER_URL = "https://explore.moderato.tempo.xyz";
 // Token decimals (TIP-20 uses 6)
 export const TOKEN_DECIMALS = 6;
 
-// ERC20/TIP-20 ABI subset
-export const ERC20_ABI = parseAbi([
+// TIP-20 ABI subset (for transferWithMemo and balance checks)
+export const TIP20_ABI = parseAbi([
   "function balanceOf(address owner) view returns (uint256)",
-  "function transfer(address to, uint256 amount) returns (bool)",
   "function transferWithMemo(address to, uint256 amount, bytes32 memo)",
   "function symbol() view returns (string)",
   "function decimals() view returns (uint8)",
@@ -79,11 +78,11 @@ export function getBankBWallet() {
   return createWallet(process.env.BANK_B_PRIVATE_KEY as `0x${string}`);
 }
 
-// Helper: get pathUSD balance for an address (returns human-readable number)
-export async function getPathUSDBalance(address: Address): Promise<number> {
+// Helper: get bankUSD balance for an address (returns human-readable number)
+export async function getTokenBalance(address: Address): Promise<number> {
   const raw = await publicClient.readContract({
-    address: PATHUSD_ADDRESS,
-    abi: ERC20_ABI,
+    address: TOKEN_ADDRESS,
+    abi: TIP20_ABI,
     functionName: "balanceOf",
     args: [address],
   });

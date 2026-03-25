@@ -62,7 +62,7 @@ export interface BankState {
   customerName: string;
   omnibusAddress: string;
   balances: {
-    USDC: number;
+    bankUSD: number;
     USD: number;
   };
 }

@@ -34,8 +34,8 @@ export default function BankPanel({ bank }: BankPanelProps) {
   const omnibusUSD = useSettlementStore((s) =>
     bank === "A" ? s.bankAOmnibusUSD : s.bankBOmnibusUSD
   );
-  const USDC = useSettlementStore((s) =>
-    bank === "A" ? s.bankAUSDC : s.bankBUSDC
+  const bankUSD = useSettlementStore((s) =>
+    bank === "A" ? s.bankAbankUSD : s.bankBbankUSD
   );
 
   const isCustomerActive =
@@ -77,7 +77,7 @@ export default function BankPanel({ bank }: BankPanelProps) {
         case 3:
           return { text: "Generating pain.002 status report → Customer", color: "var(--orange-500)" };
         case 4:
-          return { text: "Onramp — Customer USD → Omnibus → USDC", color: "var(--orange-500)" };
+          return { text: "Onramp — Customer USD → Omnibus → bankUSD", color: "var(--orange-500)" };
         case 5:
           return { text: "Sending pacs.008 via SWIFT → Bank B", color: "var(--blue-500)" };
         default:
@@ -110,10 +110,10 @@ export default function BankPanel({ bank }: BankPanelProps) {
     const entries: StatementEntry[] = [];
     if (bank === "A") {
       if (step >= 4) entries.push({ label: "Received from customer", amount: amt, step: 4 });
-      if (step >= 4) entries.push({ label: "Onramp → USDC", amount: -amt, step: 4 });
+      if (step >= 4) entries.push({ label: "Onramp → bankUSD", amount: -amt, step: 4 });
     }
     if (bank === "B") {
-      if (step >= 8) entries.push({ label: "Offramp ← USDC", amount: amt, step: 8 });
+      if (step >= 8) entries.push({ label: "Offramp ← bankUSD", amount: amt, step: 8 });
       if (step >= 8) entries.push({ label: "Credit to customer", amount: -amt, step: 8 });
     }
     return entries;
@@ -349,9 +349,9 @@ export default function BankPanel({ bank }: BankPanelProps) {
         <AccountStatement
           label="Omnibus Stablecoin"
           sublabel={config.omnibusAddress}
-          currency="USDC"
-          openingBalance={config.balances.USDC}
-          currentBalance={USDC}
+          currency="bankUSD"
+          openingBalance={config.balances.bankUSD}
+          currentBalance={bankUSD}
           entries={getPathUSDEntries()}
           currentStep={step}
         />

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import {
-  getPathUSDBalance,
+  getTokenBalance,
   MINT_ADDRESS,
   BANK_A_ADDRESS,
   BANK_B_ADDRESS,
@@ -9,9 +9,9 @@ import {
 export async function GET() {
   try {
     const [mint, bankA, bankB] = await Promise.all([
-      getPathUSDBalance(MINT_ADDRESS),
-      getPathUSDBalance(BANK_A_ADDRESS),
-      getPathUSDBalance(BANK_B_ADDRESS),
+      getTokenBalance(MINT_ADDRESS),
+      getTokenBalance(BANK_A_ADDRESS),
+      getTokenBalance(BANK_B_ADDRESS),
     ]);
 
     return NextResponse.json({

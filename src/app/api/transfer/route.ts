@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import {
   getBankAWallet,
   publicClient,
-  PATHUSD_ADDRESS,
+  TOKEN_ADDRESS,
   BANK_B_ADDRESS,
-  ERC20_ABI,
+  TIP20_ABI,
   toTokenUnits,
   uetrToBytes32,
   EXPLORER_URL,
@@ -19,8 +19,8 @@ export async function POST(request: Request) {
     const bankAWallet = getBankAWallet();
 
     const txHash = await bankAWallet.writeContract({
-      address: PATHUSD_ADDRESS,
-      abi: ERC20_ABI,
+      address: TOKEN_ADDRESS,
+      abi: TIP20_ABI,
       functionName: "transferWithMemo",
       args: [BANK_B_ADDRESS, tokenAmount, memo],
       feePayer: feePayerAccount,

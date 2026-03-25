@@ -6,7 +6,7 @@ export const BANK_A = {
   balances: {
     customerUSD: 500_000,
     omnibusUSD: 1_000_000,
-    USDC: 0, // real balance fetched from chain
+    bankUSD: 0, // real balance fetched from chain
   },
 };
 
@@ -18,12 +18,12 @@ export const BANK_B = {
   balances: {
     customerUSD: 300_000,
     omnibusUSD: 1_000_000,
-    USDC: 0, // real balance fetched from chain
+    bankUSD: 0, // real balance fetched from chain
   },
 };
 
 export const DEMO_TRANSFER_AMOUNT = 150_000;
 export const DEMO_CURRENCY = "USD";
-export const DEMO_TOKEN = "USDC";
+export const DEMO_TOKEN = "bankUSD";
 
 export const EXPLORER_URL = process.env.NEXT_PUBLIC_EXPLORER_URL || "https://explore.moderato.tempo.xyz";

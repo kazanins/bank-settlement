@@ -24,9 +24,9 @@ interface SettlementStore {
   bankBCustomerUSD: number;
   bankBOmnibusUSD: number;
 
-  // On-chain USDC balances (real from Tempo)
-  bankAUSDC: number;
-  bankBUSDC: number;
+  // On-chain bankUSD balances (real from Tempo)
+  bankAbankUSD: number;
+  bankBbankUSD: number;
 
   isoMessages: ISOMessage[];
   tempoTransfers: TempoTransfer[];
@@ -71,8 +71,8 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
   bankBCustomerUSD: BANK_B.balances.customerUSD,
   bankBOmnibusUSD: BANK_B.balances.omnibusUSD,
 
-  bankAUSDC: 0,
-  bankBUSDC: 0,
+  bankAbankUSD: 0,
+  bankBbankUSD: 0,
 
   isoMessages: [],
   tempoTransfers: [],
@@ -97,8 +97,8 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
       if (res.ok) {
         const data = await res.json();
         set({
-          bankAUSDC: data.bankA,
-          bankBUSDC: data.bankB,
+          bankAbankUSD: data.bankA,
+          bankBbankUSD: data.bankB,
         });
       }
     } catch (e) {
@@ -248,8 +248,8 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
                   bank: "A",
                   amount,
                   fromToken: "USD",
-                  toToken: "USDC",
-                  description: "Onramp — USD → USDC",
+                  toToken: "bankUSD",
+                  description: "Onramp — USD → bankUSD",
                   txHash: data.txHash,
                 },
                 timestamp: Date.now(),
@@ -459,9 +459,9 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
                   action: "offramp",
                   bank: "B",
                   amount,
-                  fromToken: "USDC",
+                  fromToken: "bankUSD",
                   toToken: "USD",
-                  description: "Offramp — USDC → USD",
+                  description: "Offramp — bankUSD → USD",
                   txHash: data.txHash,
                 },
                 timestamp: Date.now(),
@@ -544,8 +544,8 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
       bankAOmnibusUSD: BANK_A.balances.omnibusUSD,
       bankBCustomerUSD: BANK_B.balances.customerUSD,
       bankBOmnibusUSD: BANK_B.balances.omnibusUSD,
-      bankAUSDC: 0,
-      bankBUSDC: 0,
+      bankAbankUSD: 0,
+      bankBbankUSD: 0,
       isoMessages: [],
       tempoTransfers: [],
       transactions: [],

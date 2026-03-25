@@ -355,10 +355,10 @@ export default function CenterPanel() {
                 }}
               >
                 <span style={{ color: "var(--green-500)", fontWeight: 600 }}>
-                  USDC Transfer
+                  bankUSD Transfer
                 </span>
                 <span style={{ color: "var(--text-secondary)" }}>
-                  {activeTempoTransfer.amount.toLocaleString()} USDC
+                  {activeTempoTransfer.amount.toLocaleString()} bankUSD
                 </span>
               </motion.div>
             )}
@@ -386,7 +386,7 @@ export default function CenterPanel() {
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
                     <span style={{ color: "var(--green-500)", fontWeight: 600 }}>
-                      {formatAmount(t.amount)} USDC
+                      {formatAmount(t.amount)} bankUSD
                     </span>
                     <span style={{ color: "var(--text-tertiary)", fontFamily: "monospace", fontSize: 9 }}>
                       {truncateHash(t.txHash)}

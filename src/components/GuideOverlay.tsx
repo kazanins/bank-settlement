@@ -22,7 +22,7 @@ const INTRO_STEPS: StepConfig[] = [
   {
     target: '[data-guide="bank-a"]',
     title: "Bank A — Sending Bank",
-    body: "Bank A's customer initiates the payment. The payment gateway & engine processes SWIFT messages, and the accounts section shows how funds flow from USD through the omnibus to USDC on Tempo.",
+    body: "Bank A's customer initiates the payment. The payment gateway & engine processes SWIFT messages, and the accounts section shows how funds flow from USD through the omnibus to bankUSD on Tempo.",
     tooltip: "right",
   },
   {
@@ -34,7 +34,7 @@ const INTRO_STEPS: StepConfig[] = [
   {
     target: '[data-guide="bank-b"]',
     title: "Bank B — Receiving Bank",
-    body: "Bank B receives the interbank transfer. Funds arrive as USDC on Tempo, then get offramped back to fiat USD and credited to the customer's account.",
+    body: "Bank B receives the interbank transfer. Funds arrive as bankUSD on Tempo, then get offramped back to fiat USD and credited to the customer's account.",
     tooltip: "left",
   },
   {
@@ -65,13 +65,13 @@ const POST_DEMO_STEPS: StepConfig[] = [
   {
     target: '[data-guide="transactions-a"] [data-guide-tx="onramp"]',
     title: "2. Onramp — USD to Stablecoin",
-    body: "The sending bank converts the customer's fiat USD into USDC stablecoins on Tempo.",
+    body: "The sending bank converts the customer's fiat USD into bankUSD stablecoins on Tempo.",
     tooltip: "right",
   },
   {
     target: '[data-guide="bank-a"] [data-guide-section="accounts"]',
     title: "3. Fund Movement Through Accounts",
-    body: "Funds flow through three accounts: the customer's USD is debited, passed through the omnibus fiat reserve, and converted into USDC in the onchain omnibus stablecoin account.",
+    body: "Funds flow through three accounts: the customer's USD is debited, passed through the omnibus fiat reserve, and converted into bankUSD in the onchain omnibus stablecoin account.",
     tooltip: "right",
   },
   {
@@ -82,21 +82,21 @@ const POST_DEMO_STEPS: StepConfig[] = [
   },
   {
     target: '[data-guide="network"] [data-guide-section="tempo"]',
-    title: "5. Stablecoin Transfer on Tempo (USDC)",
-    body: "Simultaneously, the USDC stablecoin transfer settles on Tempo with the same UETR embedded as a transfer memo. This allows reconciling the SWIFT message with the onchain settlement.",
+    title: "5. Stablecoin Transfer on Tempo (bankUSD)",
+    body: "Simultaneously, the bankUSD stablecoin transfer settles on Tempo with the same UETR embedded as a transfer memo. This allows reconciling the SWIFT message with the onchain settlement.",
     tooltip: "right",
   },
   {
     target: '[data-guide="transactions-b"] [data-guide-tx="pacs008"]',
     title: "6. Receiving Bank Reconciles (UETR)",
-    body: "Bank B receives both the SWIFT pacs.008 message and the onchain USDC transfer. The matching UETR allows automatic reconciliation — the bank can verify the incoming funds match the payment instruction.",
+    body: "Bank B receives both the SWIFT pacs.008 message and the onchain bankUSD transfer. The matching UETR allows automatic reconciliation — the bank can verify the incoming funds match the payment instruction.",
     tooltip: "left",
     additionalTargets: ['[data-guide="transactions-b"] [data-guide-tx="usdc-transfer"]'],
   },
   {
     target: '[data-guide="transactions-b"] [data-guide-tx="offramp"]',
     title: "7. Offramp — Stablecoin to Fiat",
-    body: "Bank B offramps the received USDC back to fiat USD. The stablecoins are converted through the omnibus accounts back into traditional currency.",
+    body: "Bank B offramps the received bankUSD back to fiat USD. The stablecoins are converted through the omnibus accounts back into traditional currency.",
     tooltip: "left",
   },
   {

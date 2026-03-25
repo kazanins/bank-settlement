@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { Actions } from "viem/tempo";
 import {
   getBankBWallet,
+  getMintWallet,
   publicClient,
-  PATHUSD_ADDRESS,
+  TOKEN_ADDRESS,
   MINT_ADDRESS,
-  ERC20_ABI,
+  TIP20_ABI,
   toTokenUnits,
   uetrToBytes32,
   EXPLORER_URL,
@@ -17,23 +19,33 @@ export async function POST(request: Request) {
     const tokenAmount = toTokenUnits(amount);
     const memo = uetrToBytes32(uetr);
     const bankBWallet = getBankBWallet();
+    const mintWallet = getMintWallet();
 
-    const txHash = await bankBWallet.writeContract({
-      address: PATHUSD_ADDRESS,
-      abi: ERC20_ABI,
+    // Step 1: Bank B transfers bankUSD back to mint wallet
+    const transferHash = await bankBWallet.writeContract({
+      address: TOKEN_ADDRESS,
+      abi: TIP20_ABI,
       functionName: "transferWithMemo",
       args: [MINT_ADDRESS, tokenAmount, memo],
       feePayer: feePayerAccount,
     });
+    await publicClient.waitForTransactionReceipt({ hash: transferHash });
 
-    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+    // Step 2: Mint wallet burns the bankUSD
+    const burnHash = await Actions.token.burn(mintWallet, {
+      token: TOKEN_ADDRESS,
+      amount: tokenAmount,
+      memo,
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: burnHash });
     const block = await publicClient.getBlock({ blockNumber: receipt.blockNumber });
 
     return NextResponse.json({
-      txHash,
+      txHash: transferHash,
+      burnTxHash: burnHash,
       blockNumber: Number(receipt.blockNumber),
       timestamp: Number(block.timestamp),
-      explorerUrl: `${EXPLORER_URL}/tx/${txHash}`,
+      explorerUrl: `${EXPLORER_URL}/tx/${transferHash}`,
       status: receipt.status,
     });
   } catch (error) {

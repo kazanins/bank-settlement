@@ -207,7 +207,7 @@ export default function TransactionList({ bank, transactions }: TransactionListP
                         letterSpacing: "0.05em",
                       }}
                     >
-                      USDC Transfer
+                      bankUSD Transfer
                     </span>
                     <span
                       style={{
