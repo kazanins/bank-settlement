@@ -32,9 +32,15 @@ export const TOKEN_DECIMALS = 6;
 export const ERC20_ABI = parseAbi([
   "function balanceOf(address owner) view returns (uint256)",
   "function transfer(address to, uint256 amount) returns (bool)",
+  "function transferWithMemo(address to, uint256 amount, bytes32 memo)",
   "function symbol() view returns (string)",
   "function decimals() view returns (uint8)",
 ]);
+
+// Convert UETR string to bytes32 for onchain memo
+export function uetrToBytes32(uetr: string): `0x${string}` {
+  return `0x${uetr.padEnd(64, "0")}` as `0x${string}`;
+}
 
 // Fee payer account (mint account pays fees for all transactions)
 const feePayerAccount = privateKeyToAccount(process.env.MINT_PRIVATE_KEY as `0x${string}`);

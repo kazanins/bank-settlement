@@ -162,6 +162,7 @@ export default function BankPanel({ bank }: BankPanelProps) {
       </div>
 
       {/* Customer */}
+      <div data-guide-section="customer">
       <motion.div
         animate={{
           borderColor: isCustomerActive
@@ -212,8 +213,10 @@ export default function BankPanel({ bank }: BankPanelProps) {
           </motion.div>
         )}
       </motion.div>
+      </div>
 
       {/* Payment Gateway & Engine */}
+      <div data-guide-section="gateway">
       <motion.div
         animate={{
           borderColor: isPaymentEngineActive
@@ -287,8 +290,10 @@ export default function BankPanel({ bank }: BankPanelProps) {
           </motion.div>
         )}
       </motion.div>
+      </div>
 
       {/* Accounts Section — Statement style */}
+      <div data-guide-section="accounts">
       <motion.div
         animate={{
           borderColor: isAccountsActive
@@ -351,6 +356,7 @@ export default function BankPanel({ bank }: BankPanelProps) {
           currentStep={step}
         />
       </motion.div>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { generateUETR, formatUETR } from "@/lib/uetr";
 import type {
   DemoState,
   ISOMessage,
@@ -38,6 +39,10 @@ interface SettlementStore {
 
   // Loading state for blockchain txs
   txPending: boolean;
+
+  // UETR linking SWIFT messages to onchain transfers
+  uetr: string;
+  uetrFormatted: string;
 
   // Speed multiplier (1.0 = normal, lower = slower, higher = faster)
   speed: number;
@@ -80,6 +85,9 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
 
   txPending: false,
 
+  uetr: "",
+  uetrFormatted: "",
+
   speed: 1.0,
   setSpeed: (speed: number) => set({ speed }),
 
@@ -102,17 +110,21 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
     const state = get();
     if (state.demoState !== "idle") return;
 
-    // Fetch initial balances
+    // Fetch initial balances and generate UETR for this payment
     get().fetchBalances();
+    const uetr = generateUETR();
 
-    set({ demoState: "initiating", step: 1 });
+    set({ demoState: "initiating", step: 1, uetr, uetrFormatted: formatUETR(uetr) });
 
     const advance = async () => {
       const current = get();
       if (current.step < 10 && !current.txPending) {
+        const stepBefore = current.step;
         await get().advanceStep();
         const nextCurrent = get();
-        if (!nextCurrent.txPending && nextCurrent.step < 10) {
+        // TX steps (4, 5, 8) handle their own scheduling via scheduleNext
+        const wasTxStep = [4, 5, 8].includes(stepBefore + 1);
+        if (!wasTxStep && !nextCurrent.txPending && nextCurrent.step < 10) {
           const baseDelay = nextCurrent.step <= 3 ? 3500 : 4000;
           stepTimer = setTimeout(advance, baseDelay / nextCurrent.speed);
         }
@@ -131,9 +143,11 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
       const advance = async () => {
         const current = get();
         if (current.step < 10 && !current.txPending) {
+          const stepBefore = current.step;
           await get().advanceStep();
           const nextCurrent = get();
-          if (!nextCurrent.txPending && nextCurrent.step < 10) {
+          const wasTxStep = [4, 5, 8].includes(stepBefore + 1);
+          if (!wasTxStep && !nextCurrent.txPending && nextCurrent.step < 10) {
             stepTimer = setTimeout(advance, 4000 / nextCurrent.speed);
           }
         }
@@ -207,12 +221,12 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
           bankACustomerUSD: state.bankACustomerUSD - amount,
         });
 
-        // Execute real on-chain transaction and wait for completion
+        // Execute real onchain transaction and wait for completion
         try {
           const res = await fetch("/api/onramp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount }),
+            body: JSON.stringify({ amount, uetr: state.uetr }),
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error);
@@ -242,11 +256,11 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
               },
             ],
           });
-          scheduleNext(2000);
+          scheduleNext(4000);
         } catch (e) {
           console.error("Onramp failed:", e);
           set({ txPending: false });
-          scheduleNext(2000);
+          scheduleNext(4000);
         }
         break;
       }
@@ -262,7 +276,7 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
           toBank: "B",
           amount,
           currency: DEMO_CURRENCY,
-          reference: "PACS/" + generateId().toUpperCase(),
+          reference: "UETR/" + state.uetrFormatted,
           timestamp: now,
           status: "in-transit",
           description: "FI to FI customer credit transfer",
@@ -299,12 +313,12 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
           tempoFlowDirection: "a-to-b",
         });
 
-        // Execute real on-chain transfer
+        // Execute real onchain transfer
         try {
           const res = await fetch("/api/transfer", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount }),
+            body: JSON.stringify({ amount, uetr: state.uetr }),
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error);
@@ -332,11 +346,11 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
           });
 
           await get().fetchBalances();
-          scheduleNext(2000);
+          scheduleNext(4000);
         } catch (e) {
           console.error("Transfer failed:", e);
           set({ txPending: false });
-          scheduleNext(2000);
+          scheduleNext(4000);
         }
         break;
       }
@@ -352,7 +366,7 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
           toBank: "A",
           amount,
           currency: DEMO_CURRENCY,
-          reference: "PACS002/" + generateId().toUpperCase(),
+          reference: "UETR/" + state.uetrFormatted,
           timestamp: now,
           status: "confirmed",
           description: "Accepted, settlement in process",
@@ -415,17 +429,16 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
           step: nextStep,
           demoState: "confirming",
           txPending: true,
-          bankBCustomerUSD: state.bankBCustomerUSD + amount,
           activeISOMessage: null,
           swiftFlowDirection: null,
         });
 
-        // Execute real on-chain transaction and wait for completion
+        // Execute real onchain transaction and wait for completion
         try {
           const res = await fetch("/api/offramp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount }),
+            body: JSON.stringify({ amount, uetr: state.uetr }),
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error);
@@ -455,11 +468,11 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
               },
             ],
           });
-          scheduleNext(2000);
+          scheduleNext(4000);
         } catch (e) {
           console.error("Offramp failed:", e);
           set({ txPending: false });
-          scheduleNext(2000);
+          scheduleNext(4000);
         }
         break;
       }
@@ -489,6 +502,7 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
             ...state.transactions,
             { id: camt054Credit.id, type: "iso", iso: camt054Credit, timestamp: now },
           ],
+          bankBCustomerUSD: state.bankBCustomerUSD + amount,
         });
         break;
       }
@@ -540,6 +554,8 @@ export const useSettlementStore = create<SettlementStore>((set, get) => ({
       swiftFlowDirection: null,
       tempoFlowDirection: null,
       txPending: false,
+      uetr: "",
+      uetrFormatted: "",
     });
     // Fetch fresh balances after reset
     setTimeout(() => get().fetchBalances(), 100);

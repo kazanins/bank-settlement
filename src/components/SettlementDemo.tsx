@@ -18,7 +18,7 @@ export default function SettlementDemo() {
   const speed = useSettlementStore((s) => s.speed);
   const setSpeed = useSettlementStore((s) => s.setSpeed);
 
-  // Fetch on-chain balances on mount
+  // Fetch onchain balances on mount
   useEffect(() => {
     fetchBalances();
   }, [fetchBalances]);

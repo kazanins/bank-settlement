@@ -6,21 +6,23 @@ import {
   BANK_A_ADDRESS,
   ERC20_ABI,
   toTokenUnits,
+  uetrToBytes32,
   EXPLORER_URL,
 } from "@/lib/tempo";
 
 export async function POST(request: Request) {
   try {
-    const { amount } = await request.json();
+    const { amount, uetr } = await request.json();
     const tokenAmount = toTokenUnits(amount);
+    const memo = uetrToBytes32(uetr);
 
     const mintWallet = getMintWallet();
 
     const txHash = await mintWallet.writeContract({
       address: PATHUSD_ADDRESS,
       abi: ERC20_ABI,
-      functionName: "transfer",
-      args: [BANK_A_ADDRESS, tokenAmount],
+      functionName: "transferWithMemo",
+      args: [BANK_A_ADDRESS, tokenAmount, memo],
     });
 
     const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });

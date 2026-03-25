@@ -64,6 +64,7 @@ export default function CenterPanel() {
 
       {/* SWIFT Network Box */}
       <div style={{ display: "flex", flexDirection: "column", padding: "var(--space-3)", overflow: "auto" }}>
+        <div data-guide-section="swift">
         <motion.div
           animate={{
             borderColor: swiftActive ? "var(--blue-500)" : "var(--border-default)",
@@ -233,8 +234,10 @@ export default function CenterPanel() {
             </AnimatePresence>
           </div>
         </motion.div>
+        </div>
 
         {/* Tempo Blockchain Box */}
+        <div data-guide-section="tempo">
         <motion.div
           animate={{
             borderColor: tempoActive ? "var(--green-500)" : "var(--border-default)",
@@ -405,6 +408,7 @@ export default function CenterPanel() {
             </AnimatePresence>
           </div>
         </motion.div>
+        </div>
       </div>
     </div>
   );

@@ -2,19 +2,21 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSettlementStore } from "@/store/settlementStore";
 
 interface StepConfig {
   target: string;
+  additionalTargets?: string[];
   title: string;
   body: string;
   tooltip?: "below" | "right" | "left";
 }
 
-const STEPS: StepConfig[] = [
+const INTRO_STEPS: StepConfig[] = [
   {
     target: '[data-guide="transactions-a"]',
     title: "Transaction Log — Bank A",
-    body: "This column shows every message and on-chain transfer from Bank A's perspective. Watch SWIFT messages, onramp events, and stablecoin transfers appear in real time.",
+    body: "This column shows every message and onchain transfer from Bank A's perspective. Watch SWIFT messages, onramp events, and stablecoin transfers appear in real time.",
     tooltip: "right",
   },
   {
@@ -49,7 +51,65 @@ const STEPS: StepConfig[] = [
   },
 ];
 
+const POST_DEMO_STEPS: StepConfig[] = [
+  {
+    target: '[data-guide="bank-a"] [data-guide-section="customer"]',
+    title: "1. Customer Initiates Payment",
+    body: "The customer submits a standard pain.001 payment instruction — the same process as any traditional bank transfer. Nothing changes for the end user.",
+    tooltip: "right",
+    additionalTargets: [
+      '[data-guide="transactions-a"] [data-guide-tx="pain001"]',
+      '[data-guide="transactions-a"] [data-guide-tx="pain002"]',
+    ],
+  },
+  {
+    target: '[data-guide="transactions-a"] [data-guide-tx="onramp"]',
+    title: "2. Onramp — USD to Stablecoin",
+    body: "The sending bank converts the customer's fiat USD into USDC stablecoins on Tempo.",
+    tooltip: "right",
+  },
+  {
+    target: '[data-guide="bank-a"] [data-guide-section="accounts"]',
+    title: "3. Fund Movement Through Accounts",
+    body: "Funds flow through three accounts: the customer's USD is debited, passed through the omnibus fiat reserve, and converted into USDC in the onchain omnibus stablecoin account.",
+    tooltip: "right",
+  },
+  {
+    target: '[data-guide="network"] [data-guide-section="swift"]',
+    title: "4. SWIFT Message Sent (pacs.008)",
+    body: "Bank A sends a pacs.008 message through the SWIFT network to Bank B — the standard interbank credit transfer instruction. The message includes a UETR (Unique End-to-End Transaction Reference) that links it to the onchain transfer.",
+    tooltip: "right",
+  },
+  {
+    target: '[data-guide="network"] [data-guide-section="tempo"]',
+    title: "5. Stablecoin Transfer on Tempo (USDC)",
+    body: "Simultaneously, the USDC stablecoin transfer settles on Tempo with the same UETR embedded as a transfer memo. This allows reconciling the SWIFT message with the onchain settlement.",
+    tooltip: "right",
+  },
+  {
+    target: '[data-guide="transactions-b"] [data-guide-tx="pacs008"]',
+    title: "6. Receiving Bank Reconciles (UETR)",
+    body: "Bank B receives both the SWIFT pacs.008 message and the onchain USDC transfer. The matching UETR allows automatic reconciliation — the bank can verify the incoming funds match the payment instruction.",
+    tooltip: "left",
+    additionalTargets: ['[data-guide="transactions-b"] [data-guide-tx="usdc-transfer"]'],
+  },
+  {
+    target: '[data-guide="transactions-b"] [data-guide-tx="offramp"]',
+    title: "7. Offramp — Stablecoin to Fiat",
+    body: "Bank B offramps the received USDC back to fiat USD. The stablecoins are converted through the omnibus accounts back into traditional currency.",
+    tooltip: "left",
+  },
+  {
+    target: '[data-guide="transactions-b"] [data-guide-tx="camt054-credit"]',
+    title: "8. Customer Credited",
+    body: "Finally, Bank B sends a camt.054 credit notification to the beneficiary confirming the funds have arrived. The customer receives their payment — settlement is complete and fully reconciled.",
+    tooltip: "left",
+  },
+];
+
 const STORAGE_KEY = "bank-settlement-guide-seen";
+
+type GuideMode = "intro" | "post-demo" | null;
 
 interface TargetRect {
   top: number;
@@ -59,21 +119,38 @@ interface TargetRect {
 }
 
 export function GuideOverlay() {
-  const [guideStep, setGuideStep] = useState<number | null>(null);
+  const [mode, setMode] = useState<GuideMode>(null);
+  const [stepIndex, setStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
   const rafRef = useRef<number>(0);
+  const demoState = useSettlementStore((s) => s.demoState);
+  const prevDemoState = useRef(demoState);
 
-  // Show guide on first visit
+  // Show intro guide on first visit
   useEffect(() => {
     if (typeof window !== "undefined") {
       const seen = localStorage.getItem(STORAGE_KEY);
       if (!seen) {
-        setGuideStep(0);
+        setMode("intro");
+        setStepIndex(0);
       }
     }
   }, []);
 
-  const step = guideStep !== null ? STEPS[guideStep] : null;
+  // Trigger post-demo walkthrough when settlement completes
+  useEffect(() => {
+    if (prevDemoState.current !== "settled" && demoState === "settled") {
+      // Small delay to let the UI settle
+      setTimeout(() => {
+        setMode("post-demo");
+        setStepIndex(0);
+      }, 1500);
+    }
+    prevDemoState.current = demoState;
+  }, [demoState]);
+
+  const steps = mode === "intro" ? INTRO_STEPS : mode === "post-demo" ? POST_DEMO_STEPS : [];
+  const step = steps[stepIndex] ?? null;
 
   const measureTarget = useCallback(() => {
     if (!step) {
@@ -81,17 +158,34 @@ export function GuideOverlay() {
       return;
     }
     const el = document.querySelector(step.target);
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      setTargetRect({
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-      });
-    } else {
+    if (!el) {
       setTargetRect(null);
+      return;
     }
+
+    const rect = el.getBoundingClientRect();
+    let combined = { top: rect.top, left: rect.left, right: rect.right, bottom: rect.bottom };
+
+    // Expand rect to include additional targets
+    if (step.additionalTargets) {
+      for (const selector of step.additionalTargets) {
+        const el2 = document.querySelector(selector);
+        if (el2) {
+          const rect2 = el2.getBoundingClientRect();
+          combined.top = Math.min(combined.top, rect2.top);
+          combined.left = Math.min(combined.left, rect2.left);
+          combined.right = Math.max(combined.right, rect2.right);
+          combined.bottom = Math.max(combined.bottom, rect2.bottom);
+        }
+      }
+    }
+
+    setTargetRect({
+      top: combined.top,
+      left: combined.left,
+      width: combined.right - combined.left,
+      height: combined.bottom - combined.top,
+    });
   }, [step]);
 
   useEffect(() => {
@@ -115,21 +209,26 @@ export function GuideOverlay() {
   }, [measureTarget]);
 
   const advance = useCallback(() => {
-    if (guideStep === null) return;
-    if (guideStep < STEPS.length - 1) {
-      setGuideStep(guideStep + 1);
+    if (stepIndex < steps.length - 1) {
+      setStepIndex(stepIndex + 1);
     } else {
-      setGuideStep(null);
-      localStorage.setItem(STORAGE_KEY, "true");
+      setMode(null);
+      setStepIndex(0);
+      if (mode === "intro") {
+        localStorage.setItem(STORAGE_KEY, "true");
+      }
     }
-  }, [guideStep]);
+  }, [stepIndex, steps.length, mode]);
 
   const skip = useCallback(() => {
-    setGuideStep(null);
-    localStorage.setItem(STORAGE_KEY, "true");
-  }, []);
+    setMode(null);
+    setStepIndex(0);
+    if (mode === "intro") {
+      localStorage.setItem(STORAGE_KEY, "true");
+    }
+  }, [mode]);
 
-  if (guideStep === null || !step) return null;
+  if (!mode || !step) return null;
 
   const pad = 8;
   const vh = typeof window !== "undefined" ? window.innerHeight : 900;
@@ -144,13 +243,12 @@ export function GuideOverlay() {
       }
     : null;
 
-  const tooltipWidth = 300;
-  const tooltipHeight = 220;
+  const tooltipWidth = 320;
+  const tooltipHeight = 240;
   const tooltipStyle: React.CSSProperties = {};
   if (spot) {
     if (step.tooltip === "right") {
       tooltipStyle.left = spot.left + spot.width + 16;
-      // Vertically center on the spotlight, clamped to viewport
       const centerY = spot.top + spot.height / 2 - tooltipHeight / 2;
       tooltipStyle.top = Math.max(16, Math.min(centerY, vh - tooltipHeight - 16));
     } else if (step.tooltip === "left") {
@@ -158,7 +256,6 @@ export function GuideOverlay() {
       const centerY = spot.top + spot.height / 2 - tooltipHeight / 2;
       tooltipStyle.top = Math.max(16, Math.min(centerY, vh - tooltipHeight - 16));
     } else {
-      // Below
       const spaceBelow = vh - (spot.top + spot.height);
       if (spaceBelow > tooltipHeight) {
         tooltipStyle.top = spot.top + spot.height + 12;
@@ -173,12 +270,13 @@ export function GuideOverlay() {
     tooltipStyle.transform = "translate(-50%, -50%)";
   }
 
-  const isLast = guideStep === STEPS.length - 1;
+  const isLast = stepIndex === steps.length - 1;
+  const isPostDemo = mode === "post-demo";
 
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key={guideStep}
+        key={`${mode}-${stepIndex}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -208,7 +306,7 @@ export function GuideOverlay() {
               height: spot.height,
               borderRadius: "var(--radius-md)",
               border: "1px solid rgba(255, 255, 255, 0.2)",
-              boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.6)",
+              boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.8)",
               zIndex: 101,
               pointerEvents: "none",
             }}
@@ -218,7 +316,7 @@ export function GuideOverlay() {
             style={{
               position: "fixed",
               inset: 0,
-              background: "rgba(0, 0, 0, 0.6)",
+              background: "rgba(0, 0, 0, 0.8)",
               zIndex: 101,
               pointerEvents: "none",
             }}
@@ -253,7 +351,7 @@ export function GuideOverlay() {
               color: "var(--text-tertiary)",
             }}
           >
-            {guideStep + 1} / {STEPS.length}
+            {isPostDemo ? "How it works" : "Tour"} — {stepIndex + 1} / {steps.length}
           </span>
 
           <span
@@ -300,7 +398,7 @@ export function GuideOverlay() {
                 fontFamily: "inherit",
               }}
             >
-              Skip
+              {isPostDemo ? "Close" : "Skip"}
             </button>
             <button
               onClick={(e) => {
@@ -310,7 +408,7 @@ export function GuideOverlay() {
               style={{
                 height: 28,
                 padding: "0 var(--space-4)",
-                border: "1px solid var(--border-strong)",
+                border: `1px solid ${isLast ? "transparent" : "var(--border-strong)"}`,
                 borderRadius: "var(--radius-sm)",
                 background: isLast ? "var(--blue-500)" : "transparent",
                 color: isLast ? "var(--text-on-color)" : "var(--text-primary)",
@@ -321,7 +419,7 @@ export function GuideOverlay() {
                 fontFamily: "inherit",
               }}
             >
-              {isLast ? "Start Demo" : "Next"}
+              {isLast ? (isPostDemo ? "Done" : "Start Demo") : "Next"}
             </button>
           </div>
         </motion.div>

@@ -109,9 +109,21 @@ export default function TransactionList({ bank, transactions }: TransactionListP
               No transactions yet
             </div>
           )}
-          {filtered.map((tx) => (
+          {filtered.map((tx) => {
+            // Tag transactions for guide targeting
+            const guideTag =
+              (tx.type === "iso" && tx.iso?.type === "pain.001") ? "pain001" :
+              (tx.type === "iso" && tx.iso?.type === "pain.002") ? "pain002" :
+              (tx.type === "iso" && tx.iso?.type === "pacs.008") ? "pacs008" :
+              (tx.type === "iso" && tx.iso?.type === "camt.054" && tx.iso?.variant === "credit") ? "camt054-credit" :
+              (tx.type === "tempo") ? "usdc-transfer" :
+              (tx.type === "ledger" && tx.ledger?.action === "onramp") ? "onramp" :
+              (tx.type === "ledger" && tx.ledger?.action === "offramp") ? "offramp" :
+              undefined;
+            return (
             <motion.div
               key={tx.id}
+              data-guide-tx={guideTag}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -331,7 +343,8 @@ export default function TransactionList({ bank, transactions }: TransactionListP
                 </>
               )}
             </motion.div>
-          ))}
+            );
+          })}
         </AnimatePresence>
       </div>
     </div>

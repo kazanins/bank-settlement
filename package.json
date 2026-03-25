@@ -9,6 +9,9 @@
     "build": "next build",
     "start": "next start"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
