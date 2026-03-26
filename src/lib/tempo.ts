@@ -10,9 +10,7 @@ import { tempoModerato } from "viem/chains";
 import { tempoActions } from "viem/tempo";
 
 // RPC
-const RPC_USERNAME = process.env.RPC_USERNAME ?? "REDACTED_USER";
-const RPC_PASSWORD = process.env.RPC_PASSWORD ?? "REDACTED_PASS";
-export const RPC_URL = `https://${RPC_USERNAME}:${RPC_PASSWORD}@rpc.moderato.tempo.xyz`;
+export const RPC_URL = "https://rpc.moderato.tempo.xyz";
 
 // bankUSD token address on Moderato (created via TIP-20 factory)
 export const TOKEN_ADDRESS = process.env.TOKEN_ADDRESS as Address;

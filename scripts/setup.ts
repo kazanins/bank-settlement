@@ -4,11 +4,7 @@ import { tempoModerato } from "viem/chains";
 import { tempoActions, Actions } from "viem/tempo";
 import { writeFileSync, readFileSync, existsSync } from "fs";
 
-const RPC_USERNAME = "REDACTED_USER";
-const RPC_PASSWORD = "REDACTED_PASS";
-const RPC_URL = `https://${RPC_USERNAME}:${RPC_PASSWORD}@rpc.moderato.tempo.xyz`;
-const RPC_URL_PLAIN = "https://rpc.moderato.tempo.xyz";
-const BASIC_AUTH = Buffer.from(`${RPC_USERNAME}:${RPC_PASSWORD}`).toString("base64");
+const RPC_URL = "https://rpc.moderato.tempo.xyz";
 
 function loadEnv(): Record<string, string> {
   if (!existsSync(".env.local")) return {};
@@ -29,11 +25,10 @@ function writeEnv(vars: Record<string, string>) {
 }
 
 async function fundAddress(address: string) {
-  const response = await fetch(RPC_URL_PLAIN, {
+  const response = await fetch(RPC_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Basic ${BASIC_AUTH}`,
     },
     body: JSON.stringify({
       jsonrpc: "2.0",
@@ -174,8 +169,6 @@ async function main() {
   // Write .env.local
   console.log("\nStep 4: Writing .env.local...");
   writeEnv({
-    RPC_USERNAME,
-    RPC_PASSWORD,
     MINT_PRIVATE_KEY: mintKey,
     BANK_A_PRIVATE_KEY: bankAKey,
     BANK_B_PRIVATE_KEY: bankBKey,
